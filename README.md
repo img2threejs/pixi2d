@@ -2,11 +2,9 @@
 
 An independent OMP plugin for reference-guided, editable **PixiJS 2D scenes**: sprites, graphics, text, native 2D meshes and layered parallax. Includes image intake/crop/compare tools and ownership, occlusion-completion and motion-review guidance. **No 3D beta dependency.**
 
-## Showcase
+## Example code
 
-![Native PixiJS 2D render: an independently movable balloon, clouds, sun and hills](docs/images/showcase.png)
-
-Actual PixiJS **WebGPU** canvas capture of the included [showcase factory](examples/showcase.ts), at 960×640. This is an authored Graphics/Text example, **not** a reconstruction of a user image or evidence of image-to-scene fidelity. The balloon and clouds have independent motion; the scene adds no Application or ticker.
+The included [example factory](examples/showcase.ts) is an authored Graphics/Text scene at 960×640, **not** a reconstruction of a user image or evidence of image-to-scene fidelity. The balloon and clouds have independent motion; the scene adds no Application or ticker.
 
 To reproduce it, copy `examples/showcase.ts` to your existing host's `src/plugin-showcase.ts`. After that host's Application is initialized:
 
@@ -126,4 +124,4 @@ cd "$PLUGIN/skills/img2pixi2d"
 
 The host owns Application, renderer, ticker and shared resources; factories own only their nodes/listeners. A flattened image cannot reveal exact hidden artwork. Label inferred mattes/completion honestly. Real Mesh3D/Sprite3D/Model3D belongs to [pixi3d](https://github.com/img2threejs/pixi3d).
 
-Do not upload user artwork, host workspaces, credentials, apps or dependency builds. The included showcase is authored example code and its rendered PNG, not redistributed reference artwork. Repository access does not grant artwork redistribution rights.
+Do not upload user artwork, host workspaces, credentials, apps or dependency builds. The included example is authored code, not redistributed reference artwork. Repository access does not grant artwork redistribution rights.

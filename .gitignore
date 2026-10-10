@@ -1,0 +1,13 @@
+__pycache__/
+*.py[cod]
+.venv/
+node_modules/
+.env
+.env.*
+!.env.example
+.DS_Store
+.img2pixi2d/
+.img2pixi3d/
+**/runtime/vendor/
+*.tgz
+*.zip

@@ -1,0 +1,9 @@
+{
+  "name": "pixi2d",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Editable image reconstruction in PixiJS 2D through the img2pixi2d skill.",
+  "repository": { "type": "git", "url": "https://github.com/img2threejs/pixi2d.git" },
+  "files": ["skills", "README.md"],
+  "omp": {}
+}

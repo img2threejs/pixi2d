@@ -20,9 +20,22 @@ For animated playback, have your **existing** ticker pass elapsed seconds to `se
 
 ## Install
 
-Requirements: OMP, Git/GitHub CLI, an existing PixiJS v8 host, and **Python 3.10+** for the image tools. Verified host release: **PixiJS 8.22.0**. Python is not needed to run an integrated scene.
+Requirements: OMP, Git/GitHub CLI, an existing PixiJS v8 host, and **Python 3.10+** for the image tools. The npm installer also requires **Node.js 18+**; native OMP removal requires standalone **Bun** on `PATH`. Verified host release: **PixiJS 8.22.0**. Python is not needed to run an integrated scene.
 
-This repository is **private**; your GitHub account needs read access. `package.json`'s `private: true` prevents npm publication, not public GitHub visibility. On macOS/Linux:
+This repository is **private**; your GitHub account needs read access. Root `package.json` stays `private: true`. The public **`@img2threejs/pixi2d`** npm package contains only an installer, not this private skill or its tools. On macOS/Linux, configure Git access and use the pinned installer:
+
+```sh
+gh auth login --hostname github.com --git-protocol https
+gh auth setup-git --hostname github.com
+npx --yes @img2threejs/pixi2d@latest install --dry-run
+npx --yes @img2threejs/pixi2d@latest install --yes
+npx --yes @img2threejs/pixi2d@latest doctor
+PLUGIN="$HOME/.local/share/img2threejs/pixi2d"
+```
+
+The installer pins a reviewed Git commit, creates `.venv` with Pillow, and runs `omp plugin link`. It refuses dirty/unrelated checkouts and registrations pointing elsewhere. See [installer commands and publication](cli/README.md). This is a native OMP plugin, **not** an img2 harness plugin; `img2 add pixi2d` is unsupported.
+
+Alternatively, manage a source clone manually:
 
 ```sh
 gh auth login --hostname github.com --git-protocol https
@@ -105,6 +118,18 @@ Capture the **actual host canvas** to the path below, at the working image's art
 Do not resize images to manufacture agreement. RGB/alpha/SSIM metrics are diagnostics; inspect critical crops and motion with vision. HTTPS reference admission requires explicit consent and `intake --allow-network`.
 
 ## Update, verify and troubleshoot
+
+For installer-managed checkouts, use:
+
+```sh
+npx --yes @img2threejs/pixi2d@latest update --yes
+npx --yes @img2threejs/pixi2d@latest doctor
+npx --yes @img2threejs/pixi2d@latest remove --yes
+```
+
+Removal keeps the clone, Python environment and artwork. Installer updates use its pinned commit, not `git pull`.
+
+For a manually managed branch checkout:
 
 ```sh
 git -C "$PLUGIN" pull --ff-only

@@ -1,0 +1,28 @@
+name: cli-publish
+# Only cli/ ships on npm; the source repository remains private.
+on:
+  push:
+    tags: ['cli-v*']
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: CLI release tag to publish (e.g. cli-v0.1.0)
+        required: true
+        type: string
+permissions:
+  contents: read
+jobs:
+  publish:
+    permissions:
+      contents: read
+      id-token: write
+    uses: img2threejs/ci-workflows/.github/workflows/npm-publish.yml@7ef63107b39f77df3a11062a1a0a2245f500921c
+    with:
+      tag: ${{ inputs.tag || github.ref_name }}
+      tag-prefix: 'cli-v'
+      version-file: cli/package.json
+      package-directory: cli
+      node-version: '24'
+      python-version: '3.12'
+      test-command: npm test
+      provenance: 'false'

@@ -1,95 +1,129 @@
 # pixi2D — img2pixi2d
 
-Plugin OMP độc lập để tái dựng ảnh thành scene PixiJS **2D có thể chỉnh sửa**: Sprite, Graphics, Text, Mesh 2D và parallax. Bao gồm công cụ intake/crop/compare và hướng dẫn phân tách object, occlusion completion, motion review. Không cài hoặc phụ thuộc beta 3D.
+An independent OMP plugin for reference-guided, editable **PixiJS 2D scenes**: sprites, graphics, text, native 2D meshes and layered parallax. Includes image intake/crop/compare tools and ownership, occlusion-completion and motion-review guidance. **No 3D beta dependency.**
 
-Repository **private**: [img2threejs/pixi2d](https://github.com/img2threejs/pixi2d). Cần tài khoản được cấp quyền đọc; `private: true` trong package.json ngăn npm publish, không thay thế quyền riêng tư trên GitHub.
+## Showcase
 
-## Cài đặt
+![Native PixiJS 2D render: an independently movable balloon, clouds, sun and hills](docs/images/showcase.png)
 
-Yêu cầu: OMP, Git/GitHub CLI; Python **3.10+** nếu dùng công cụ ảnh. Scene chạy trong project PixiJS v8 hiện có; release đã kiểm chứng là **8.22.0**. Không cần Python để chạy scene đã tích hợp.
+Actual PixiJS **WebGPU** canvas capture of the included [showcase factory](examples/showcase.ts), at 960×640. This is an authored Graphics/Text example, **not** a reconstruction of a user image or evidence of image-to-scene fidelity. The balloon and clouds have independent motion; the scene adds no Application or ticker.
 
-Đăng nhập và clone qua HTTPS (không đặt token trong URL):
+To reproduce it, copy `examples/showcase.ts` to your existing host's `src/plugin-showcase.ts`. After that host's Application is initialized:
+
+```ts
+import { createShowcase } from './plugin-showcase';
+const showcase = createShowcase(app.stage); // Example design size: 960 x 640.
+showcase.setTime(1.5); // Seconds; only the example-owned objects move.
+showcase.reset();
+// On unmount: showcase.dispose(); remove any host-owned ticker callback first.
+```
+
+For animated playback, have your **existing** ticker pass elapsed seconds to `setTime`; do not add a second render loop. This example uses vector primitives; it does not demonstrate source-image segmentation or native mesh deformation.
+
+## Install
+
+Requirements: OMP, Git/GitHub CLI, an existing PixiJS v8 host, and **Python 3.10+** for the image tools. Verified host release: **PixiJS 8.22.0**. Python is not needed to run an integrated scene.
+
+This repository is **private**; your GitHub account needs read access. `package.json`'s `private: true` prevents npm publication, not public GitHub visibility. On macOS/Linux:
 
 ```sh
 gh auth login --hostname github.com --git-protocol https
 gh auth setup-git --hostname github.com
 mkdir -p "$HOME/.local/share/img2threejs"
 gh repo clone img2threejs/pixi2d "$HOME/.local/share/img2threejs/pixi2d"
-omp plugin link "$HOME/.local/share/img2threejs/pixi2d"
+PLUGIN="$HOME/.local/share/img2threejs/pixi2d"
+omp plugin link "$PLUGIN"
 omp plugin list --json
+python3 -m venv "$PLUGIN/.venv"
+"$PLUGIN/.venv/bin/python" -m pip install -r "$PLUGIN/skills/img2pixi2d/requirements.txt"
 ```
 
-Nếu đã clone ở nơi khác: `omp plugin link /absolute/path/to/pixi2d`.
-`link` cài plugin bằng symlink user-scoped; giữ nguyên thư mục clone. Không chạy `npm install` trong repository plugin; dependency Pixi thuộc project host, không thuộc plugin này.
+Already cloned elsewhere? Set `PLUGIN` to that absolute path and run `omp plugin link "$PLUGIN"`. Keep the clone: OMP links it by symlink. Do not run `npm install` in the plugin repository; Pixi dependencies belong to the host. **Start a new OMP session** to discover `img2pixi2d`.
 
-**Mở phiên OMP mới** để nhận skill `img2pixi2d`.
+## Recommended workflow
 
-## Sử dụng trong OMP
+1. Start OMP **inside the existing host project**, attach the original image, and invoke `/skill:img2pixi2d`.
+2. Name the objects that must be editable, required controls, target viewport and motion limits. Supply original layers/mattes/fonts when available.
+3. Review the ownership and occlusion plan before animation. Preserve source pixels; authorize inferred hidden-region completion explicitly, or limit motion to supported poses.
+4. Approve blockout/layout, then details/appearance, then interaction/motion. Reuse one admitted reference and the host preview; diagnose specific failures instead of restarting the scene.
+5. Require actual canvas captures, critical-region comparisons, independent hide/move tests, motion extrema, reset and resource-safe teardown. Pixel similarity alone does not establish editability or animation quality.
 
-Từ project PixiJS cần chỉnh sửa, đính kèm ảnh gốc rồi gọi:
+For best results, give a bounded task and concrete defects. Use 2D meshes for continuous deformation and layered parallax for depth cues; neither requires the 3D plugin. The skill is an agent workflow, **not an automatic generator launched by installation**.
+
+## Copy-ready prompts
+
+Replace the bracketed inputs with real paths and requirements. Attach the referenced image; do not leave placeholders unresolved.
+
+### Reconstruct an editable scene
 
 ```text
 /skill:img2pixi2d
-Dùng ảnh tôi đính kèm để tạo scene 2D editable trong project hiện tại.
-Giữ đúng silhouette, màu và text. Tách từng object cần di chuyển;
-không tạo app thứ hai, không tự bịa hidden pixels.
+Use [reference image path] in this existing PixiJS project. Match its silhouette,
+colors, text and layout at [viewport dimensions]. Make [object names] independently
+editable. Required controls: [controls]. Allowed motion: [limits].
+Preserve the original reference and unrelated code. Plan ownership, mattes,
+occlusion and pivots before building. Do not invent hidden pixels; request my
+approval if completion is needed. Use the existing Application and preview.
+Deliver a subject-specific factory, reconstruction data and actual canvas evidence.
+Verify critical details, hide/move isolation, full motion, reset and disposal.
 ```
 
-Agent dùng ảnh thật, lập ownership/occlusion plan, tạo factory trong host và kiểm tra canvas thực tế. Plugin không tự sinh app hoặc tự chạy reconstruction khi được cài.
+### Improve an existing reconstruction without regenerating it
 
-## Công cụ ảnh thủ công
+```text
+/skill:img2pixi2d
+Continue the existing scene against [same admitted reference path]. The defect is
+[object/region and observed failure]. Preserve the accepted layout and other objects.
+Fix only the diagnosed cause. Requested motion is [range]; completion permission
+is [none or explicitly authorized regions]. Compare actual before/after captures,
+exercise the affected object independently, and verify neutral-pose reset.
+```
 
-Các lệnh dưới dùng macOS/Linux. Thay PROJECT và IMAGE bằng đường dẫn tuyệt đối của project/ảnh thật:
+## Manual image tools
+
+Use the same plugin Python environment. Run from the skill directory; replace the host/image paths:
 
 ```sh
-PLUGIN="$HOME/.local/share/img2threejs/pixi2d"
 PROJECT="/absolute/path/to/your-pixi-project"
 IMAGE="/absolute/path/to/reference.png"
-python3 -m venv "$PLUGIN/.venv"
-"$PLUGIN/.venv/bin/python" -m pip install -r "$PLUGIN/skills/img2pixi2d/requirements.txt"
 cd "$PLUGIN/skills/img2pixi2d"
 "$PLUGIN/.venv/bin/python" -m forge.cli --help
 "$PLUGIN/.venv/bin/python" -m forge.cli intake "$IMAGE" --workspace "$PROJECT/.img2pixi2d"
-```
-
-Intake giữ original bytes và tạo working PNG sRGB RGBA bất biến. Đọc kích thước trả về trước khi chọn bbox có pixel nhìn thấy. Ví dụ crop vùng 16×16: đổi tọa độ theo ảnh thật; vùng ngoài ảnh hoặc hoàn toàn transparent không tạo được layer hữu ích.
-
-```sh
+# Example only: choose X Y WIDTH HEIGHT inside a visible region of your image.
 "$PLUGIN/.venv/bin/python" -m forge.cli crop \
-  --workspace "$PROJECT/.img2pixi2d" --bbox 0 0 16 16 \
-  --out layers/observed-region.png
+  --workspace "$PROJECT/.img2pixi2d" --bbox 0 0 16 16 --out layers/observed-region.png
 ```
 
-Bbox là `X Y WIDTH HEIGHT` trong ảnh gốc. Nếu vùng chứa object lẫn hàng xóm, thêm `--mask masks/part.png` với matte đã cung cấp/được review, relative với workspace. Crop không segment hoặc inpaint. Đặt lại ảnh trim bằng `trimOffset` trong metadata, không dùng mép texture làm pivot mới.
+Intake preserves original bytes and an immutable sRGB RGBA working PNG. A crop must contain visible pixels; replace the example bbox for your image. Add `--mask masks/part.png` for a supplied/reviewed matte, relative to the workspace. Crop **does not segment or inpaint**. Restore trimmed placement using the crop metadata's `trimOffset`.
 
-So sánh **capture canvas thật** với working PNG, cùng kích thước artboard; không tự resize:
+Capture the **actual host canvas** to the path below, at the working image's artboard dimensions, before comparing:
 
 ```sh
 "$PLUGIN/.venv/bin/python" -m forge.cli compare \
   --reference "$PROJECT/.img2pixi2d/reference/working.png" \
-  --render "$PROJECT/.img2pixi2d/evidence/render.png" \
-  --out "$PROJECT/.img2pixi2d/evidence"
+  --render "$PROJECT/.img2pixi2d/evidence/render.png" --out "$PROJECT/.img2pixi2d/evidence"
 ```
 
-Dùng `--bbox X Y WIDTH HEIGHT` để kiểm tra vùng quan trọng. Metric RGB/alpha/SSIM chỉ là chẩn đoán; không chứng minh identity, editability hoặc motion đạt yêu cầu. URL ảnh HTTPS cần đồng ý rõ ràng và `intake --allow-network`.
+Do not resize images to manufacture agreement. RGB/alpha/SSIM metrics are diagnostics; inspect critical crops and motion with vision. HTTPS reference admission requires explicit consent and `intake --allow-network`.
 
-## Cập nhật và kiểm tra
+## Update, verify and troubleshoot
 
 ```sh
 git -C "$PLUGIN" pull --ff-only
-# Mở phiên OMP mới sau khi cập nhật.
+cd "$PLUGIN/skills/img2pixi2d"
 "$PLUGIN/.venv/bin/python" tests/test_tools.py --image "$IMAGE" -v
 ```
 
-Lệnh test chạy từ `skills/img2pixi2d`, dùng một ảnh thật do người dùng cung cấp; repository không mang fixture ảnh. Nếu requirements đổi, cài lại vào cùng venv. `omp plugin uninstall pixi2d` gỡ đăng ký OMP; không dùng nó để xóa artwork của host.
+- Reinstall requirements if they change; start a new OMP session after updates.
+- **Clone denied:** request organization/repository access; do not put credentials in clone URLs.
+- **Skill missing:** check `omp plugin list --json`, the linked clone and the new session.
+- **Empty crop:** choose a visible region and the correct matte; alpha-preserving crop is not segmentation.
+- `omp plugin uninstall pixi2d` removes registration, not host artwork.
 
-## Phạm vi và tài liệu
+## Scope and further reading
 
-- [Skill](skills/img2pixi2d/SKILL.md): workflow cho agent.
-- [Reconstruction](skills/img2pixi2d/references/reconstruction.md), [PixiJS](skills/img2pixi2d/references/pixijs.md).
-- [Object separation](skills/img2pixi2d/references/object-separation.md), [occlusion completion](skills/img2pixi2d/references/occlusion-completion.md), [review](skills/img2pixi2d/references/review.md).
-- Host sở hữu Application, renderer, ticker và shared resources; scene factory chỉ sở hữu nodes/listeners của mình.
-- Một ảnh flattened không cung cấp hidden surfaces chính xác. Không công bố inferred matte/completion là artist alpha hoặc dữ liệu quan sát được.
-- Real Mesh3D/Sprite3D/Model3D thuộc plugin riêng [pixi3d](https://github.com/img2threejs/pixi3d); native Mesh 2D và layered parallax vẫn ở đây.
+[Skill workflow](skills/img2pixi2d/SKILL.md) · [Reconstruction](skills/img2pixi2d/references/reconstruction.md) · [PixiJS integration](skills/img2pixi2d/references/pixijs.md) · [Object separation](skills/img2pixi2d/references/object-separation.md) · [Occlusion completion](skills/img2pixi2d/references/occlusion-completion.md) · [Review](skills/img2pixi2d/references/review.md).
 
-Không đưa ảnh người dùng, workspace `.img2pixi2d`, credential, app hoặc dependency build vào repository plugin. Không suy diễn quyền phân phối artwork từ quyền truy cập repository.
+The host owns Application, renderer, ticker and shared resources; factories own only their nodes/listeners. A flattened image cannot reveal exact hidden artwork. Label inferred mattes/completion honestly. Real Mesh3D/Sprite3D/Model3D belongs to [pixi3d](https://github.com/img2threejs/pixi3d).
+
+Do not upload user artwork, host workspaces, credentials, apps or dependency builds. The included showcase is authored example code and its rendered PNG, not redistributed reference artwork. Repository access does not grant artwork redistribution rights.

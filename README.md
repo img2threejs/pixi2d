@@ -1,11 +1,17 @@
+<p align="center">
+  <a href="https://github.com/img2threejs">
+    <img src="assets/logo.svg" width="112" height="104" alt="img2 organization logo" />
+  </a>
+</p>
+
 # pixi2D — img2pixi2d
 
 > An independent OMP plugin for **reference-guided, editable PixiJS 2D scenes** — sprites, graphics, text, native 2D meshes and layered parallax, with image intake/crop/compare tools and ownership, occlusion-completion and motion-review guidance. No 3D beta dependency.
 
-[![PixiJS](https://img.shields.io/badge/PixiJS-8.22.0-34c4eb.svg)](#)
-[![Python](https://img.shields.io/badge/Python-3.10%2B-3776ab.svg)](#)
-[![License](https://img.shields.io/badge/license-private-lightgrey.svg)](#)
-[![OMP](https://img.shields.io/badge/OMP-omp_plugin-5b6f3a.svg)](#)
+[![PixiJS](https://img.shields.io/badge/PixiJS-8.22.0-34c4eb.svg)](https://pixijs.com/)
+[![Python](https://img.shields.io/badge/Python-3.10%2B-3776ab.svg)](https://www.python.org/)
+[![npm](https://img.shields.io/badge/npm-%40img2threejs%2Fpixi2d-CB3837.svg)](https://www.npmjs.com/package/@img2threejs/pixi2d)
+[![OMP](https://img.shields.io/badge/OMP-native_plugin-5b6f3a.svg)](#install)
 
 The `img2pixi2d` skill turns a single reference image into an **editable** PixiJS v8 scene inside your existing host application: every named object is a real node you can move, hide, restyle or animate independently, with provenance preserved and inferred regions labelled honestly.
 
@@ -54,9 +60,8 @@ import { createShowcase } from './plugin-showcase';
 const showcase = createShowcase(app.stage); // Design size: 960 x 640.
 showcase.setTime(1.5);                       // Seconds; only example-owned objects move.
 showcase.reset();
-// On unmount:
-//   remove any host-owned ticker callback first, then:
-showcase.dispose();
+// On unmount: remove any host-owned ticker callback first, then:
+// showcase.dispose();
 ```
 
 For animated playback, let your **existing** ticker pass elapsed seconds into `setTime`; do not start a second render loop. This example uses vector primitives; it does not demonstrate source-image segmentation or native mesh deformation.
@@ -67,31 +72,45 @@ For animated playback, let your **existing** ticker pass elapsed seconds into `s
 
 **Requirements**
 
-- OMP, Git and the GitHub CLI
+- OMP and Git on `PATH`
 - An existing PixiJS **v8** host project (verified release: **PixiJS 8.22.0**)
-- **Python 3.10+** for the image tools (not needed to run an integrated scene)
+- **Python 3.10+** with `venv` / pip for the image tools (not needed to run an integrated scene)
+- **Node.js 18+** for the npm installer
+- Standalone **Bun** on `PATH` for native OMP removal
 
-> Repository access is gated: your GitHub account needs read access. `package.json` declares `private: true` to prevent npm publication, not to restrict GitHub visibility.
+The GitHub repository is **public**; cloning does not require a GitHub account. Root `package.json` stays `private: true` to prevent publishing the entire source tree to npm. The separately published [`@img2threejs/pixi2d`](https://www.npmjs.com/package/@img2threejs/pixi2d) package contains only the installer.
 
-**macOS / Linux**
+### Recommended: pinned npm installer
+
+On **macOS / Linux**:
 
 ```sh
-gh auth login --hostname github.com --git-protocol https
-gh auth setup-git --hostname github.com
+npx --yes @img2threejs/pixi2d@latest install --dry-run
+npx --yes @img2threejs/pixi2d@latest install --yes
+npx --yes @img2threejs/pixi2d@latest doctor
+PLUGIN="$HOME/.local/share/img2threejs/pixi2d"
+```
 
+The first `--yes` allows npx to download the CLI; the final `--yes` authorizes installer mutations. The installer clones a reviewed, pinned commit, prepares `.venv` with Pillow, and runs `omp plugin link`. It refuses dirty/unrelated checkouts and registrations pointing elsewhere. See [installer commands](cli/README.md).
+
+This is a **native OMP plugin**, not an img2 harness plugin; `img2 add pixi2d` is unsupported. Start a **new OMP session** after installation, then invoke `/skill:img2pixi2d` inside your existing PixiJS project.
+
+### Alternative: manual Git installation
+
+```sh
 mkdir -p "$HOME/.local/share/img2threejs"
-gh repo clone img2threejs/pixi2d "$HOME/.local/share/img2threejs/pixi2d"
+git clone https://github.com/img2threejs/pixi2d.git \
+  "$HOME/.local/share/img2threejs/pixi2d"
 
 PLUGIN="$HOME/.local/share/img2threejs/pixi2d"
-omp plugin link "$PLUGIN"
-omp plugin list --json
-
 python3 -m venv "$PLUGIN/.venv"
 "$PLUGIN/.venv/bin/python" -m pip install \
   -r "$PLUGIN/skills/img2pixi2d/requirements.txt"
+omp plugin link "$PLUGIN"
+omp plugin list --json
 ```
 
-Already cloned elsewhere? Set `PLUGIN` to that absolute path and run `omp plugin link "$PLUGIN"`. Keep the clone in place — OMP links it by symlink. **Do not** run `npm install` inside the plugin; Pixi dependencies belong to the host. Start a new OMP session to discover `img2pixi2d`.
+Already cloned elsewhere? Set `PLUGIN` to that absolute path and run `omp plugin link "$PLUGIN"`. Keep the clone in place — OMP links it by symlink. **Do not** run `npm install` inside the source plugin; Pixi dependencies belong to the host.
 
 ---
 
@@ -173,6 +192,18 @@ Do not resize images to manufacture agreement. RGB / alpha / SSIM metrics are di
 
 ## Update, verify and troubleshoot
 
+For an installer-managed checkout:
+
+```sh
+npx --yes @img2threejs/pixi2d@latest update --yes
+npx --yes @img2threejs/pixi2d@latest doctor
+npx --yes @img2threejs/pixi2d@latest remove --yes
+```
+
+Installer updates use that CLI version's reviewed pin, not the latest Git branch. Removal unregisters the plugin but keeps its source checkout, Python environment and host artwork.
+
+For a manually managed branch checkout:
+
 ```sh
 git -C "$PLUGIN" pull --ff-only
 cd "$PLUGIN/skills/img2pixi2d"
@@ -180,7 +211,7 @@ cd "$PLUGIN/skills/img2pixi2d"
 ```
 
 - Reinstall requirements when they change; start a new OMP session after updates.
-- **Clone denied** — request organization/repository access; never put credentials in clone URLs.
+- **Clone failed** — check the public Git URL, network/proxy settings and target directory; no organization access grant is required. Never put credentials in clone URLs.
 - **Skill missing** — check `omp plugin list --json`, the linked clone and the new session.
 - **Empty crop** — choose a visible region and the correct matte; alpha-preserving crop is not segmentation.
 - `omp plugin uninstall pixi2d` removes registration, not host artwork.
@@ -208,6 +239,8 @@ Do not upload user artwork, host workspaces, credentials, apps or dependency bui
 pixi2d/
 ├── README.md
 ├── package.json
+├── assets/                  # img2 brand logo and its license
+├── cli/                     # Published installer-only npm package
 ├── examples/
 │   └── showcase.ts          # Authored 960×640 Graphics + Text factory
 └── skills/
@@ -223,4 +256,7 @@ pixi2d/
 
 ## License
 
-Private. Repository access does **not** grant rights to redistribute any referenced artwork. See `package.json#private`.
+- **Skill, Python tools and example:** no repository-wide source-code license is declared. Public GitHub visibility and npm's `private: true` flag are not code licenses; contact the maintainers before reuse or redistribution beyond granted permissions.
+- **npm installer:** Apache-2.0, scoped to `cli/`; see [`cli/LICENSE`](cli/LICENSE).
+- **img2 logo:** reused from the img2threejs brand asset under Apache-2.0; see [`assets/LICENSE`](assets/LICENSE).
+- **User artwork, fonts and reference images:** retain their own ownership and licensing. Repository access does not grant redistribution rights.

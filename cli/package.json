@@ -1,0 +1,14 @@
+{
+  "name": "@img2threejs/pixi2d",
+  "version": "0.1.0",
+  "description": "Installer-only CLI for the private img2pixi2d native OMP skill plugin.",
+  "type": "module",
+  "license": "Apache-2.0",
+  "engines": { "node": ">=18" },
+  "bin": { "img2pixi2d": "bin/cli.mjs" },
+  "files": ["bin/cli.mjs"],
+  "scripts": { "test": "node --test test/*.test.mjs" },
+  "repository": { "type": "git", "url": "https://github.com/img2threejs/pixi2d.git", "directory": "cli" },
+  "publishConfig": { "access": "public", "provenance": false },
+  "keywords": ["img2threejs", "img2pixi2d", "pixijs", "omp", "installer"]
+}
